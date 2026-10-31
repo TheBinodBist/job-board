@@ -23,6 +23,13 @@ In the output, you'll find options to open the app in a
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
 - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
+The mobile app uses `http://127.0.0.1:8000/api/v1` by default on iOS and web,
+and `http://10.0.2.2:8000/api/v1` on the Android emulator. For a physical
+device or a different backend host, set `EXPO_PUBLIC_API_URL` to the backend's
+reachable API URL. Run Django on `0.0.0.0:8000` to make it accessible from a
+physical device on the same network. Android 17 and later require local-network
+permission; the app requests it before loading jobs.
+
 You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
 ## Get a fresh project

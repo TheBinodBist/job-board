@@ -7,9 +7,10 @@ export interface Job {
   title: string;
   company: string;
   location: string;
-  salary: string;
-  type: string;
-  category: string;
+  description?: string;
+  salary?: string;
+  type?: string;
+  category?: string;
   logoColor: string;
   logoText: string;
   featured?: boolean;
@@ -47,6 +48,12 @@ export default function JobCard({ job, onPress }: Props) {
             {job.company}
           </Text>
 
+          {job.description ? (
+            <Text className="mt-2 text-sm leading-5 text-[#82948B]" numberOfLines={2}>
+              {job.description}
+            </Text>
+          ) : null}
+
           {job.featured && (
             <View className="mt-2 self-start rounded-md bg-[#F0F5DF] px-2 py-1">
               <Text className="text-[10px] font-bold text-[#78952F]">
@@ -76,20 +83,24 @@ export default function JobCard({ job, onPress }: Props) {
           </Text>
         </View>
 
-        <View className="rounded-full bg-[#F3F6F3] px-3 py-2">
-          <Text className="text-xs text-[#71877D]">{job.type}</Text>
+        {job.type ? (
+          <View className="rounded-full bg-[#F3F6F3] px-3 py-2">
+            <Text className="text-xs text-[#71877D]">{job.type}</Text>
+          </View>
+        ) : null}
+      </View>
+
+      {job.salary || job.category ? (
+        <View className="mt-4 flex-row items-center justify-between">
+          {job.salary ? (
+            <Text className="font-bold text-[#20483B]">{job.salary}</Text>
+          ) : null}
+
+          {job.category ? (
+            <Text className="text-xs text-[#91A199]">{job.category}</Text>
+          ) : null}
         </View>
-      </View>
-
-      <View className="mt-4 flex-row items-center justify-between">
-        <Text className="font-bold text-[#20483B]">
-          {job.salary}
-        </Text>
-
-        <Text className="text-xs text-[#91A199]">
-          {job.category}
-        </Text>
-      </View>
+      ) : null}
     </Pressable>
   );
 }
