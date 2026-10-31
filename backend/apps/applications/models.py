@@ -2,7 +2,7 @@ from django.db import models
 
 class Application(models.Model):
     user = models.ForeignKey('accounts.User', on_delete=models.CASCADE)
-    # job = models.ForeignKey('jobs.Job', on_delete=models.CASCADE)
+    job = models.ForeignKey('jobs.Job', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
