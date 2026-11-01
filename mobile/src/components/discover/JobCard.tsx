@@ -65,7 +65,10 @@ export default function JobCard({ job, onPress }: Props) {
 
         <Pressable
           hitSlop={10}
-          onPress={() => setSaved(!saved)}
+          onPress={(event) => {
+            event.stopPropagation();
+            setSaved(!saved);
+          }}
         >
           <Ionicons
             name={saved ? "bookmark" : "bookmark-outline"}

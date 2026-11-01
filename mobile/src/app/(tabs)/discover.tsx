@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View, Text, ScrollView } from "react-native";
+import { router } from "expo-router";
 
 import DiscoverHeader from "@/components/discover/DiscoverHeader";
 import SearchFilterCard from "@/components/discover/SearchFilterCard";
@@ -92,9 +93,9 @@ export default function Discover() {
         </View>
 
         Weekly shortlist
-        {/* <View className="mt-9 px-6">
+        <View className="mt-9 px-6">
           <WeeklyShortlist />
-        </View> */}
+        </View>
 
         {/* Categories */}
         <View className="mt-9">
@@ -138,7 +139,16 @@ export default function Discover() {
           ) : filteredJobs.length ? (
             <View className="gap-4">
               {filteredJobs.map((job) => (
-                <JobCard key={job.id} job={job} />
+                <JobCard
+                  key={job.id}
+                  job={job}
+                  onPress={(selectedJob) =>
+                    router.push({
+                      pathname: "/jobs/[id]",
+                      params: { id: selectedJob.id },
+                    })
+                  }
+                />
               ))}
             </View>
           ) : (
