@@ -1,28 +1,33 @@
-import { ScrollView, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Link, router } from "expo-router";
 
-const stats = [
-  { label: "Applications", value: "28" },
-  { label: "Saved", value: "12" },
-  { label: "Interviews", value: "4" },
-  { label: "Response", value: "76%" },
-];
-
-const strengths = [
-  "Product design",
-  "UX strategy",
-  "Design systems",
-  "Cross-functional leadership",
-];
-
-const preferences = [
-  "Remote-first",
-  "Hybrid",
-  "Brand & SaaS",
-  "Senior-level",
-];
+import {
+  clearAuthSession,
+  getAuthUser,
+  subscribeToAuthUser,
+} from "@/services/auth";
 
 export default function Profile() {
+  const [user, setUser] = useState(getAuthUser);
+  useEffect(() => subscribeToAuthUser(setUser), []);
+  const fullName = [user?.first_name, user?.last_name]
+    .filter(Boolean)
+    .join(" ");
+  const displayName = fullName || user?.username || "Job seeker";
+  const initials = displayName
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const signOut = () => {
+    clearAuthSession();
+    router.replace("/login");
+  };
+
   return (
     <View className="flex-1 bg-[#F7F9F7]">
       <ScrollView
@@ -33,80 +38,57 @@ export default function Profile() {
           <Text className="text-3xl font-extrabold text-[#193C32]">Profile</Text>
         </View>
 
-        <View className="rounded-[28px] border border-[#E3E9E4] bg-white p-5">
-          <View className="flex-row items-center">
-            <View className="h-16 w-16 items-center justify-center rounded-full bg-[#E2ECFF]">
-              <Text className="text-2xl font-bold text-[#20483B]">AB</Text>
+        {user ? (
+          <>
+            <View className="rounded-[28px] border border-[#E3E9E4] bg-white p-5">
+              <View className="flex-row items-center">
+                <View className="h-16 w-16 items-center justify-center rounded-full bg-[#E2ECFF]">
+                  <Text className="text-2xl font-bold text-[#20483B]">{initials}</Text>
+                </View>
+
+                <View className="ml-4 flex-1">
+                  <Text className="text-xl font-bold text-[#193C32]">
+                    {displayName}
+                  </Text>
+                  <Text className="mt-1 text-sm text-[#71877D]">
+                    @{user.username}
+                  </Text>
+                </View>
+              </View>
+
+              <View className="mt-5 flex-row items-center rounded-2xl bg-[#F3F6F3] px-4 py-3">
+                <Ionicons name="mail-outline" size={18} color="#71877D" />
+                <Text className="ml-2 flex-1 text-sm text-[#71877D]">
+                  {user.email}
+                </Text>
+              </View>
             </View>
 
-            <View className="ml-4 flex-1">
-              <Text className="text-xl font-bold text-[#193C32]">Ariana Brooks</Text>
-              <Text className="mt-1 text-sm text-[#71877D]">
-                Senior Product Designer
-              </Text>
-            </View>
-
-            <Ionicons name="chevron-forward" size={22} color="#71877D" />
-          </View>
-
-          <View className="mt-5 flex-row items-center rounded-2xl bg-[#F3F6F3] px-4 py-3">
-            <Ionicons name="location-outline" size={18} color="#71877D" />
-            <Text className="ml-2 text-sm text-[#71877D]">Seattle, WA</Text>
-          </View>
-        </View>
-
-        <View className="mt-6 flex-row flex-wrap justify-between">
-          {stats.map((stat) => (
-            <View
-              key={stat.label}
-              className="mb-3 w-[48%] rounded-[22px] border border-[#E3E9E4] bg-white p-4"
+            <Pressable
+              onPress={signOut}
+              className="mt-6 flex-row items-center justify-center rounded-2xl border border-[#E3E9E4] bg-white px-4 py-4"
             >
-              <Text className="text-2xl font-extrabold text-[#193C32]">
-                {stat.value}
-              </Text>
-              <Text className="mt-1 text-xs uppercase tracking-[1.2px] text-[#71877D]">
-                {stat.label}
-              </Text>
-            </View>
-          ))}
-        </View>
-
-        <View className="mt-6 rounded-[28px] border border-[#E3E9E4] bg-white p-5">
-          <Text className="text-lg font-bold text-[#193C32]">About me</Text>
-          <Text className="mt-3 text-sm leading-6 text-[#71877D]">
-            Product designer with 6+ years of experience building elegant interfaces,
-            improving onboarding flows, and collaborating closely with engineering and
-            growth teams.
-          </Text>
-        </View>
-
-        <View className="mt-6 rounded-[28px] border border-[#E3E9E4] bg-white p-5">
-          <Text className="text-lg font-bold text-[#193C32]">Strengths</Text>
-          <View className="mt-4 flex-row flex-wrap">
-            {strengths.map((strength) => (
-              <View
-                key={strength}
-                className="mb-2 mr-2 rounded-full bg-[#F3F6F3] px-3 py-2"
-              >
-                <Text className="text-xs text-[#20483B]">{strength}</Text>
-              </View>
-            ))}
+              <Ionicons name="log-out-outline" size={20} color="#B42318" />
+              <Text className="ml-2 font-semibold text-[#B42318]">Sign out</Text>
+            </Pressable>
+          </>
+        ) : (
+          <View className="items-center rounded-[28px] border border-[#E3E9E4] bg-white p-6">
+            <Ionicons name="person-circle-outline" size={56} color="#71877D" />
+            <Text className="mt-3 text-lg font-bold text-[#193C32]">
+              You’re not signed in
+            </Text>
+            <Text className="mt-2 text-center text-sm leading-6 text-[#71877D]">
+              Sign in or create an account to see your profile.
+            </Text>
+            <Link
+              href="/login"
+              className="mt-5 rounded-2xl bg-[#20483B] px-6 py-3 font-semibold text-white"
+            >
+              Log in
+            </Link>
           </View>
-        </View>
-
-        <View className="mt-6 rounded-[28px] border border-[#E3E9E4] bg-white p-5">
-          <Text className="text-lg font-bold text-[#193C32]">Job preferences</Text>
-          <View className="mt-4 flex-row flex-wrap">
-            {preferences.map((preference) => (
-              <View
-                key={preference}
-                className="mb-2 mr-2 rounded-full bg-[#EAF3ED] px-3 py-2"
-              >
-                <Text className="text-xs text-[#193C32]">{preference}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
+        )}
       </ScrollView>
     </View>
   );
