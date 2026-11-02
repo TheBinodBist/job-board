@@ -1,4 +1,4 @@
-import { post } from "@/services/api";
+import { post, setApiAccessToken } from "@/services/api";
 
 export interface AuthTokens {
   access: string;
@@ -50,6 +50,7 @@ export function setAuthSession(tokens: AuthTokens, user: AuthUser) {
   accessToken = tokens.access;
   refreshToken = tokens.refresh;
   authUser = user;
+  setApiAccessToken(tokens.access);
   authUserListeners.forEach((listener) => listener(authUser));
 }
 
@@ -57,6 +58,7 @@ export function clearAuthSession() {
   accessToken = "";
   refreshToken = "";
   authUser = null;
+  setApiAccessToken("");
   authUserListeners.forEach((listener) => listener(authUser));
 }
 

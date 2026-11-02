@@ -4,6 +4,12 @@ const localHost = Platform.OS === "android" ? "10.0.2.2" : "127.0.0.1";
 export const baseURL =
   process.env.EXPO_PUBLIC_API_URL ?? `http://${localHost}:8000/api/v1`;
 
+let accessToken = "";
+
+export function setApiAccessToken(token: string) {
+  accessToken = token;
+}
+
 function getErrorMessage(data: unknown): string | undefined {
   if (typeof data === "string") return data;
   if (Array.isArray(data)) {
@@ -45,7 +51,7 @@ async function ensureLocalNetworkPermission() {
 
 async function request<T>(
   path: string,
-  method: "GET" | "POST",
+  method: "GET" | "POST" | "DELETE",
   body?: Record<string, unknown>,
 ): Promise<T> {
   const url = `${baseURL.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
@@ -60,6 +66,7 @@ async function request<T>(
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        ...(accessToken ? { Authorization: "Bearer " + accessToken } : {}),
       },
       body: body ? JSON.stringify(body) : undefined,
       signal: controller.signal,
@@ -84,4 +91,8 @@ export async function get<T>(path: string): Promise<T> {
 
 export async function post<T>(path: string, body: Record<string, unknown>): Promise<T> {
   return request<T>(path, "POST", body);
+}
+
+export async function del<T>(path: string): Promise<T> {
+  return request<T>(path, "DELETE");
 }

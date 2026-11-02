@@ -1,6 +1,5 @@
 import { View, Text, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
 
 export interface Job {
   id: number;
@@ -19,11 +18,18 @@ export interface Job {
 interface Props {
   job: Job;
   onPress?: (job: Job) => void;
+  isSaved: boolean;
+  isSaving: boolean;
+  onToggleSaved: (job: Job) => void;
 }
 
-export default function JobCard({ job, onPress }: Props) {
-  const [saved, setSaved] = useState(false);
-
+export default function JobCard({
+  job,
+  onPress,
+  isSaved,
+  isSaving,
+  onToggleSaved,
+}: Props) {
   return (
     <Pressable
       onPress={() => onPress?.(job)}
@@ -65,15 +71,18 @@ export default function JobCard({ job, onPress }: Props) {
 
         <Pressable
           hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel={isSaved ? "Remove saved job" : "Save job"}
+          disabled={isSaving}
           onPress={(event) => {
             event.stopPropagation();
-            setSaved(!saved);
+            onToggleSaved(job);
           }}
         >
           <Ionicons
-            name={saved ? "bookmark" : "bookmark-outline"}
+            name={isSaved ? "bookmark" : "bookmark-outline"}
             size={23}
-            color={saved ? "#20483B" : "#91A199"}
+            color={isSaved ? "#20483B" : "#91A199"}
           />
         </Pressable>
       </View>

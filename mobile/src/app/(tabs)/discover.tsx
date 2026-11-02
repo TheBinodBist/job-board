@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, View, Text, ScrollView } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  View,
+  Text,
+  ScrollView,
+} from "react-native";
 import { router } from "expo-router";
 
 import DiscoverHeader from "@/components/discover/DiscoverHeader";
@@ -7,7 +14,13 @@ import SearchFilterCard from "@/components/discover/SearchFilterCard";
 import WeeklyShortlist from "@/components/discover/WeeklyShortlist";
 import JobCategories from "@/components/discover/JobCategories";
 import JobCard, { Job } from "@/components/discover/JobCard";
-import { fetchJobs } from "@/services/jobs";
+import {
+  fetchJobs,
+  fetchSavedJobs,
+  removeSavedJob,
+  saveJob,
+} from "@/services/jobs";
+import { getAccessToken } from "@/services/auth";
 
 export default function Discover() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -17,13 +30,34 @@ export default function Discover() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadCount, setReloadCount] = useState(0);
+  const [savedJobIds, setSavedJobIds] = useState<Record<number, number>>({});
+  const [savingJobId, setSavingJobId] = useState<number | null>(null);
+  const [savedStateKnown, setSavedStateKnown] = useState(false);
 
   useEffect(() => {
     let isActive = true;
 
-    fetchJobs()
-      .then((loadedJobs) => {
-        if (isActive) setJobs(loadedJobs);
+    Promise.allSettled([
+      fetchJobs(),
+      getAccessToken() ? fetchSavedJobs() : Promise.resolve([]),
+    ])
+      .then(([jobsResult, savedJobsResult]) => {
+        if (!isActive) return;
+        if (jobsResult.status === "rejected") throw jobsResult.reason;
+        setJobs(jobsResult.value);
+
+        if (savedJobsResult.status === "fulfilled") {
+          setSavedJobIds(
+            Object.fromEntries(
+              savedJobsResult.value.map((savedJob) => [savedJob.job.id, savedJob.id]),
+            ),
+          );
+          setSavedStateKnown(true);
+        } else {
+          console.error("Could not load saved jobs:", savedJobsResult.reason);
+          setSavedJobIds({});
+          setSavedStateKnown(false);
+        }
       })
       .catch((requestError: unknown) => {
         if (!isActive) return;
@@ -58,6 +92,48 @@ export default function Discover() {
 
     return matchesKeyword && matchesLocation && matchesCategory;
   });
+
+  const toggleSavedJob = async (jobId: number) => {
+    if (!getAccessToken()) {
+      Alert.alert("Log in to save jobs", "Sign in to keep jobs in your saved list.", [
+        { text: "Cancel", style: "cancel" },
+        { text: "Log in", onPress: () => router.push("/login") },
+      ]);
+      return;
+    }
+
+    setSavingJobId(jobId);
+    try {
+      let savedJobId = savedJobIds[jobId];
+      if (!savedStateKnown) {
+        const savedJobs = await fetchSavedJobs();
+        const latestSavedJobs = Object.fromEntries(
+          savedJobs.map((savedJob) => [savedJob.job.id, savedJob.id]),
+        );
+        setSavedJobIds(latestSavedJobs);
+        setSavedStateKnown(true);
+        savedJobId = latestSavedJobs[jobId];
+      }
+
+      if (savedJobId) {
+        await removeSavedJob(savedJobId);
+        setSavedJobIds((current) => {
+          const next = { ...current };
+          delete next[jobId];
+          return next;
+        });
+      } else {
+        const savedJob = await saveJob(jobId);
+        setSavedJobIds((current) => ({ ...current, [jobId]: savedJob.id }));
+      }
+    } catch (requestError) {
+      const detail =
+        requestError instanceof Error ? requestError.message : String(requestError);
+      Alert.alert("Could not update saved jobs", detail);
+    } finally {
+      setSavingJobId(null);
+    }
+  };
 
   return (
     <View className="flex-1 bg-[#F7F9F7]">
@@ -142,6 +218,9 @@ export default function Discover() {
                 <JobCard
                   key={job.id}
                   job={job}
+                  isSaved={Boolean(savedJobIds[job.id])}
+                  isSaving={savingJobId === job.id}
+                  onToggleSaved={(selectedJob) => void toggleSavedJob(selectedJob.id)}
                   onPress={(selectedJob) =>
                     router.push({
                       pathname: "/jobs/[id]",

@@ -3,13 +3,13 @@ from .views import ApplicationView, ApplicationDetailView
 
 urlpatterns = [
     path(
-        "/",
+        "",
         ApplicationView.as_view(),
         name="applications"
     ),
 
     path(
-        "/<int:pk>/",
+        "<int:pk>/",
         ApplicationDetailView.as_view(),
         name="application-detail"
     ),
